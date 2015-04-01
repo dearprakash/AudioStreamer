@@ -25,7 +25,7 @@
 #import <UIKit/UIKit.h>
 #else
 #import <Cocoa/Cocoa.h>
-#endif TARGET_OS_IPHONE			
+#endif // TARGET_OS_IPHONE
 
 #include <pthread.h>
 #include <AudioToolbox/AudioToolbox.h>
@@ -84,6 +84,7 @@ typedef enum
 	AS_NO_ERROR = 0,
 	AS_NETWORK_CONNECTION_FAILED,
 	AS_FILE_STREAM_GET_PROPERTY_FAILED,
+	AS_FILE_STREAM_SET_PROPERTY_FAILED,
 	AS_FILE_STREAM_SEEK_FAILED,
 	AS_FILE_STREAM_PARSE_BYTES_FAILED,
 	AS_FILE_STREAM_OPEN_FAILED,
@@ -131,8 +132,10 @@ extern NSString * const ASStatusChangedNotification;
 	bool inuse[kNumAQBufs];			// flags to indicate that a buffer is still in use
 	NSInteger buffersUsed;
 	NSDictionary *httpHeaders;
+	NSString *fileExtension;
 	
 	AudioStreamerState state;
+	AudioStreamerState laststate;
 	AudioStreamerStopReason stopReason;
 	AudioStreamerErrorCode errorCode;
 	OSStatus err;
@@ -175,6 +178,8 @@ extern NSString * const ASStatusChangedNotification;
 @property (readonly) double duration;
 @property (readwrite) UInt32 bitRate;
 @property (readonly) NSDictionary *httpHeaders;
+@property (copy,readwrite) NSString *fileExtension;
+@property (nonatomic) BOOL shouldDisplayAlertOnError; // to control whether the alert is displayed in failWithErrorCode
 
 - (id)initWithURL:(NSURL *)aURL;
 - (void)start;
@@ -184,6 +189,7 @@ extern NSString * const ASStatusChangedNotification;
 - (BOOL)isPaused;
 - (BOOL)isWaiting;
 - (BOOL)isIdle;
+- (BOOL)isAborted; // return YES if streaming halted due to error (AS_STOPPING + AS_STOPPING_ERROR)
 - (void)seekToTime:(double)newSeekTime;
 - (double)calculatedBitRate;
 
